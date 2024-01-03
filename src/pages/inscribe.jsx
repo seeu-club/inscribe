@@ -32,16 +32,16 @@ export default function Inscribe() {
             <h1 className="page-title">Inscribe</h1>
             <div className="search-bar">
                 <div></div>
-                <Button type="primary" className="deploy" icon={<PlusOutlined />} onClick={()=>showModal()}>
-                    Deploy
+                <Button type="primary" className="launch-btn" onClick={() => showModal()}>
+                    <span className="label"><PlusOutlined/> Deploy</span>
                 </Button>
             </div>
             <div className="inscribe-tick"><span className="tick-name">SeeU</span></div>
             <div className="total-remain">
-                <div className="data"><span className="label">Total: </span><span className="value">21,000,000</span></div>
+                <div className="data"><span className="label">Total: </span><span className="value">21,000,000,000</span></div>
                 <div className="double">
                     <div className="data"><span className="label">Remain: </span><span className="value">0</span></div>
-                    <div className="limit">Per limit: 1,000</div>
+                    <div className="limit">Per limit: 1,000,000</div>
                 </div>
                 <Progress percent={100} />
             </div>
@@ -64,7 +64,7 @@ export default function Inscribe() {
 data:,{&quot;p&quot;:&quot;asc-20&quot;,&quot;op&quot;:&quot;mint&quot;,&quot;tick&quot;:&quot;aval&quot;,&quot;amt&quot;:&quot;100000000&quot;}"/>
             </div>
             <div className=" flex items-center justify-center gap-5">
-                <Button  type="primary"  className=" h-10 w-[200px]" >mint</Button>
+                <Button  type="primary"  className=" h-10 w-[200px] launch-btn " ><span className="label">Mint</span></Button>
             </div>
         </main>
     </Layout>

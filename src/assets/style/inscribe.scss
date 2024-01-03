@@ -268,3 +268,34 @@
     cursor: pointer
 }
 
+
+.launch-btn {
+    display: flex;
+    width: 200px;
+    height: 40px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    border-radius: 90px;
+    padding: 2px;
+    border: none;
+    background-image: linear-gradient(90deg, #ff0000, #bdff00, #00ff66, #00b2ff, #2400ff, #ff00d6)
+}
+
+.launch-btn .label {
+    width: 100%;
+    height: 100%;
+    line-height: 36px;
+    border-radius: 90px;
+    background: #fff;
+    color: #000;
+    font-family: Aeonik Mono;
+    font-size: 20px
+}
+
+.launch-btn .label:hover {
+    background: #fff;
+    color: #000
+}
+

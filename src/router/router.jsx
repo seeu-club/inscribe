@@ -6,7 +6,6 @@ function RouterLink() {
     return (
         <>
             <Routes>
-                <Route path="/" element={<Navigate to="/inscribe" />} />
                 <Route path="/inscribe" element={<Inscribe />} />
 
             </Routes>
