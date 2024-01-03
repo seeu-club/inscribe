@@ -95,7 +95,7 @@ export default function Header() {
 
     return <div className="app-header">
         <LogoBox>
-            <NavLink to="/"><img src={Logo} alt=""/></NavLink>
+            <NavLink to="https://seeuclub.xyz/"><img src={Logo} alt=""/></NavLink>
         </LogoBox>
         <Box className="menu">
             <NavLink  to="/explorer" className={({ isActive }) => isActive ? 'menu-item active' : 'menu-item false'}>
