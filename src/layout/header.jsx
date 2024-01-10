@@ -69,14 +69,23 @@ export default function Header() {
 
     const connect = async() =>{
         const result = await unisat.requestAccounts();
-        handleAccountsChanged(result);
+        self.accounts = result;
+
+        if (result.length > 0) {
+            store.dispatch(saveAccount(result[0]));
+
+        }
+
+        // handleAccountsChanged(result);
     }
 
-    const handleAccountsChanged = (_accounts) => {
-        self.accounts = _accounts;
-        if (_accounts.length > 0) {
-            store.dispatch(saveAccount(_accounts[0]));
-        }
+    const handleAccountsChanged = () => {
+
+        disconnect()
+        // self.accounts = _accounts;
+        // if (_accounts.length > 0) {
+        //     store.dispatch(saveAccount(_accounts[0]));
+        // }
     };
 
   const shortAddress = (addr) => {

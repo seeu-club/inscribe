@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
+    "@cmdcode/tapscript": "^1.4.4",
     "@reduxjs/toolkit": "^2.0.1",
     "antd": "^5.12.2",
+    "axios": "^1.6.5",
+    "buffer": "^6.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^9.0.4",

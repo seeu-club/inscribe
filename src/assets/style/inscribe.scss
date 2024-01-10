@@ -239,6 +239,7 @@
     align-items: center;
     justify-content: space-between;
     width: 800px;
+    margin-bottom: 30px;
 }
 
 .inscribe-page .search-bar .rank-icon {
@@ -269,7 +270,7 @@
 }
 
 
-.launch-btn {
+.launch-btn,.ording:hover {
     display: flex;
     width: 200px;
     height: 40px;
@@ -283,7 +284,7 @@
     background-image: linear-gradient(90deg, #ff0000, #bdff00, #00ff66, #00b2ff, #2400ff, #ff00d6)
 }
 
-.launch-btn .label {
+.launch-btn .label,.ording:hover .label {
     width: 100%;
     height: 100%;
     line-height: 36px;
@@ -294,8 +295,29 @@
     font-size: 20px
 }
 
-.launch-btn .label:hover {
+.launch-btn .label:hover,.ording:hover .label:hover {
     background: #fff;
     color: #000
 }
 
+.ording{
+    background: #fff;
+    color: #000;
+    border: 0;
+    display: flex;
+    width: 200px;
+    height: 40px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    border-radius: 90px;
+    padding: 2px;
+    border: none;
+    background-image: none;
+    box-shadow: none;
+    font-size: 20px;
+    font-family: Aeonik Mono;
+    transition:none;
+
+}
