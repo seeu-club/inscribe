@@ -1,9 +1,13 @@
-import {Button, Input} from "antd";
+import {Button, Input,Slider,InputNumber} from "antd";
 import styled from "styled-components";
-
-import {Address,  Tx,Signer} from "@cmdcode/tapscript"
-import {createTextInscription, getInscribeAddress, getUTXOList} from "../utils/public.js";
+import axios from 'axios';
+import store from "../store/index.js";
+import {saveLoading} from "../store/reducer.js";
 import {useSelector} from "react-redux";
+import {deploy} from "../api/deploy.js";
+import { useForm,Controller } from "react-hook-form";
+import {useEffect, useState} from "react";
+import {Params} from "../utils/constant.js";
 
 const { TextArea } = Input;
 
@@ -17,103 +21,388 @@ const Box = styled.div`
     }
 `
 
+const FlexLine = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 20px 0;
+    .sliderLft{
+        flex-grow: 1;
+    }
+`
+
+const UlBox = styled.ul`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    margin-bottom: 30px;
+    li{
+        width: 32%;
+        margin: 0;
+        list-style: none;
+        box-sizing: border-box;
+        border-radius: 8px;
+        padding: 2px;
+
+        cursor: pointer;
+        background: #f8f8f8;
+        height: 100px;
+        .bg{
+            background: #fff;
+            padding: 20px;
+            width: 100%;
+            height: 96px;
+            box-sizing: border-box;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        &.active{
+            background-image: linear-gradient(90deg, #ff0000, #bdff00, #00ff66, #00b2ff, #2400ff, #ff00d6)
+        }
+    }
+    .ls{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    .sym{
+        opacity: 0.5;
+    }
+    .num{
+        font-size: 28px;
+        margin-right: 10px;
+
+        font-weight: bold;
+        background-image: linear-gradient(to right, #ff779b, #4d86fa);
+        background-clip: text;
+        font-family: Aeonik Mono;
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+`
+
+const LineBox = styled.div`
+    width: 100%;
+    dl{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        
+        dt{
+            opacity: 0.6;
+        }
+        dd{
+            font-size: 18px;
+        }
+        &:last-child{
+            border-top: 1px solid #ccc;
+            padding-top: 30px;
+        }
+    }
+    
+`
+
+const HashBox = styled.div`
+    background: #f8f8f8;
+    padding: 20px;
+    margin-bottom: 40px;
+    gap: 17px;
+    display: flex;
+    align-items: center;
+`
+
 export default function Deploy(){
 
     const account = useSelector(store => store.account);
+    const network = useSelector(store => store.network);
+    const [inscription,setInscription] = useState({"p":"brc-20","op":"deploy","tick":"test","max":21000000,"lim":1000})
+    const [inputValue, setInputValue] = useState(0);
+    const [type, setType] = useState(0);
+    const [fee,setFee] = useState({})
+    const [step,setStep] = useState(0)
+    const [result,setResult] = useState({});
+    const [hash,setHash] = useState('');
+    const [list,setList] = useState([
+        {
+            name:"Economy",
+            value:0
+        },
+        {
+            name:"Normal",
+            value:0
+        },
+        {
+            name:"Custom",
+            value:0
+        }
+    ])
 
-    const handleDeploy = async () =>{
-        // const text = `{"p":"brc-20","op":"deploy","tick":"${tick}","max":"${totalSupply}","lim":"${mintLimit}"}`
-        const text = `{"p":"brc-20","op":"deploy","tick":"tick","max":"200000000000","lim":"100"}`
-        const inscription = createTextInscription(text)
-        console.log(inscription)
+    const {
+        control,
+        handleSubmit,
+        setValue,
+        watch,
+        formState: { errors },
+    } = useForm();
 
-        let pubkey = await window.unisat.getPublicKey();
-        console.log(pubkey)
+    useEffect(() => {
+        setValue('receive', account);
+    }, [account]);
 
-        let network = await window.unisat.getNetwork();
+    useEffect(()=>{
+        getRate()
+    },[])
 
-        console.log(network)
-
-        //
-        const {address, tpubkey, cblock, tapleaf, script} = getInscribeAddress(pubkey, inscription, network)
-
-        console.log(address, tpubkey, cblock, tapleaf, script)
-
-        const utxos = await getUTXOList(account);
-        const input = {txId: utxos[0].txid, index: utxos[0].vout, amount: utxos[0].satoshi}
-        console.log(input)
-
-
-        const txdata = Tx.create({
-            vin: [
-                {
-                    // Use the txid of the funding transaction used to send the sats.
-                    txid: input.txId,
-                    // Specify the index value of the output that you are going to spend from.
-                    vout: input.index,
-                    // Also include the value and script of that ouput.
-                    prevout: {
-                        // Feel free to change this if you sent a different amount.
-                        value: input.amount,
-                        // This is what our address looks like in script form.
-                        scriptPubKey: ["OP_1", tpubkey],
-                    },
-                },
-            ],
-            vout: [
-                {
-                    // We are leaving behind 1000 sats as a fee to the miners.
-                    value: 546,
-                    // This is the new script that we are locking our funds to.
-                    scriptPubKey: Address.toScriptPubKey(address),
-                },
-                {
-                    value: input.amount - 5000,
-                    scriptPubKey: Address.toScriptPubKey(address),
-                },
-            ],
-        })
-        console.log(txdata)
-
+    const getRate = async() =>{
+        try{
+            let rt = await axios.get('https://mempool.space/api/v1/fees/recommended');
+            const {economyFee,halfHourFee,fastestFee} = rt.data;
+            let arr = [...list];
+            arr[0].value = economyFee;
+            arr[1].value = halfHourFee;
+            arr[2].value = fastestFee;
+            setInputValue(fastestFee)
+            setList(arr);
+            setFee(rt.data)
+        }catch (e) {
+            console.error("https://mempool.space/api/v1/fees/recommended",e)
+        }
 
 
-        const sigHash = Signer.taproot.hash(txdata, 0, {extension: tapleaf})
-        console.error(sigHash)
-        let res = await window.unisat.signPsbts(sigHash);
-        console.log(res)
-
-        return;
-
-        // const sig = Signer.taproot.sign(seckey, txdata, 0, {extension: tapleaf})
-        txdata.vin[0].witness = [sig, script, cblock]
-        // const isValid = Signer.taproot.verify(txdata, 0, {pubkey, throws: true})
-        // console.log(Tx.util.getTxSize(txdata), Tx.util.getTxid(txdata))
-        // console.log("Your txhex:", Tx.encode(txdata).hex, isValid)
-        // // console.dir(txdata, {depth: null})
-        // console.log(`deploy tx: ${await boardCast(Tx.encode(txdata).hex)}`)
     }
+
+    const onSubmit = (data) =>{
+
+        const {tick,supply,limit} = data;
+        let str = {"p":"brc-20","op":"deploy","tick":tick,"max":supply,"lim":limit}
+        setInscription(str)
+
+
+        handleDeploy(data)
+
+    }
+
+    const handleConfirm = () =>{
+        handleSubmit(onSubmit)();
+    }
+
+    const handleInputChange = (event) => {
+        setValue('receive', event.target.value);
+    };
+
+    const onChange = (newValue) => {
+        setInputValue(newValue);
+    };
+
+    const handleType = (num) =>{
+        setType(num)
+    }
+
+    const handlePay = async() =>{
+        try{
+            const {feeRate,payAddress,amount} = result;
+            let txid = await window.unisat.sendBitcoin(payAddress,amount, {feeRate});
+            console.log(txid)
+            setHash(txid)
+
+        }catch (e) {
+            console.error("sendBitcoin",e)
+        }
+    }
+
+
+    const handleDeploy = async (data) =>{
+        store.dispatch(saveLoading(true));
+        const {tick,supply,limit,receive} = data;
+        let obj = {
+            receiveAddress: receive,
+            feeRate: inputValue,
+            outputValue: 546,
+            devAddress: "",
+            devFee: 0,
+            "brc20Ticker": tick,
+            "brc20Max": supply.toString(),
+            "brc20Limit": limit.toString()
+        }
+        try{
+
+            let rt = await deploy(obj);
+            console.log(rt)
+            setResult(rt.data)
+            setStep(1)
+
+        }catch (e) {
+            console.error(e)
+            setStep(0)
+        }finally {
+            store.dispatch(saveLoading(null));
+        }
+    }
+
+
 
     return <Box>
         <div className="flex items-center justify-between gap-2 bt20">
             <span>Tick:</span>
-            <Input placeholder="tick" className="h-10 w-[600px] "/>
+            <Controller name="tick" control={control} rules={{required: true,minLength:4,maxLength:4}}
+                        render={({field}) => (
+                            <>
+                                <Input
+                                    placeholder="Tick,4 characters like &quot;abcd&quot;..."
+                                    className="h-10 w-[600px]"
+                                    status={errors.tick ? "error" : ""}
+                                    {...field}
+                                />
+                            </>
 
+                        )}
+            />
         </div>
+
         <div className="flex items-center justify-between gap-2 bt20">
             <span>Total Supply:</span>
-            <Input type="number" placeholder="amount" className="h-10 w-[600px]"/>
+            <Controller name="supply" control={control} rules={{required: true}}
+
+                        render={({field}) => (
+                            <>
+                                <Input
+                                    placeholder="supply"
+                                    className="h-10 w-[600px]"
+                                    status={errors.supply ? "error" : ""}
+                                    {...field}
+                                />
+                            </>
+
+                        )}
+            />
         </div>
-        <div className=" flex items-center justify-between gap-2 bt20">
+        <div className="flex items-center justify-between gap-2 bt20">
             <span>Limit per mint:</span>
-            <Input type="number" placeholder="repeat time" className="h-10 w-[600px]"/>
+            <Controller name="limit" control={control} rules={{required: true}}
+                        render={({field}) => (
+                            <>
+                                <Input
+                                    placeholder="limit"
+                                    className="h-10 w-[600px]"
+                                    status={errors.supply ? "error" : ""}
+                                    {...field}
+                                />
+                            </>
+
+                        )}
+            />
         </div>
+        <div className="flex items-center justify-between gap-2 bt20">
+            <span>Receive Address:</span>
+            <Controller name="receive" control={control} rules={{required: true}}
+
+                        value={watch('receive')}
+                        render={({field}) => (
+                            <>
+                                <Input
+                                    placeholder="Receive Address"
+                                    className="h-10 w-[600px]"
+                                    status={errors.receive ? "error" : ""}
+                                    {...field}
+                                    onChange={handleInputChange}
+                                />
+                            </>
+
+                        )}
+            />
+        </div>
+        <UlBox>
+
+            {
+                list.map((item,index)=> (<li
+                    key={`list_${index}`}
+                    onClick={()=>handleType(index)}
+                    className={type === index ? "active":""} >
+                    <div className="bg">
+                        <div>
+                            {item.name}
+                        </div>
+                        <div className="ls">
+                            <div className="num">{index === 2? inputValue :item.value}</div>
+                            <div className="sym">sats/vB</div>
+                        </div>
+                    </div>
+
+                </li>))
+            }
+        </UlBox>
+        {
+            type === 2 && <FlexLine>
+                <Slider
+                    min={fee?.minimumFee || 0}
+                    max={500}
+                    className="sliderLft"
+                    onChange={onChange}
+                    value={typeof inputValue === 'number' ? inputValue : 0}
+                />
+                <InputNumber
+                    min={fee?.minimumFee || 0}
+                    max={500}
+                    style={{ margin: '0 16px' }}
+                    value={inputValue}
+                    onChange={onChange}
+                />
+            </FlexLine>
+        }
+
+
         <div className=" flex flex-col gap-2 bt20">
-            <span>Inscription:</span>
-            <TextArea className="h-[100px] w-[800px]" placeholder="Inscription, example:
-{&quot;p&quot;:&quot;brc-20&quot;,&quot;op&quot;:&quot;mint&quot;,&quot;tick&quot;:&quot;aval&quot;,&quot;amt&quot;:&quot;100000000&quot;}"/>
+                    <span>Inscription:</span>
+                    <TextArea className="h-[100px] w-[800px]"  value={JSON.stringify(inscription)} disabled />
         </div>
+        {
+            !!step && <LineBox>
+                <dl>
+                    <dt>Sats In Inscription:</dt>
+                    <dd>{result?.outputValue || 0}</dd>
+                </dl>
+                <dl>
+                    <dt>Network Fee:</dt>
+                    <dd>{result?.minerFee || 0}</dd>
+                </dl>
+                <dl>
+                    <dt>Service Fee:</dt>
+                    <dd>{result?.serviceFee || 0}</dd>
+                </dl>
+
+                <dl>
+                    <dt>Total:</dt>
+                    <dd>{result?.amount || 0}</dd>
+                </dl>
+            </LineBox>
+        }
+
+        {
+            hash && <HashBox>
+                <span>txHash</span>
+                <a href={`${Params[network].scanUrl}tx/${hash}`} rel="noreferrer" target="_blank">{hash}</a>
+
+            </HashBox>
+        }
+
+
         <div className=" flex items-center justify-center gap-5">
-            <Button type="primary" className=" h-10 w-[200px] launch-btn " onClick={()=>handleDeploy()}><span className="label">Deploy</span></Button>
+            {
+                !step &&<Button type="primary" className=" h-10 w-[200px] launch-btn " onClick={() => handleConfirm()}><span
+                    className="label">Deploy</span></Button>
+            }
+            {
+                !!step &&<Button type="primary" className=" h-10 w-[200px] launch-btn " onClick={() => handlePay()}><span
+                    className="label">Pay</span></Button>
+            }
         </div>
+
+
     </Box>
 }
