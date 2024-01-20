@@ -11,11 +11,15 @@ const mainSlice = createSlice({
         saveLoading(state, action) {
             state.loading = action.payload;
         },
+        saveNetwork(state, action) {
+            state.network = action.payload;
+        },
     },
 });
 
 export const {
     saveAccount,
+    saveNetwork,
     saveLoading
 } = mainSlice.actions;
 export default mainSlice.reducer;

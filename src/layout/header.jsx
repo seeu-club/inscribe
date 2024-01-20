@@ -1,14 +1,15 @@
 import { Button } from 'antd';
 import Logo from "../assets/images/logo.png";
-import {SearchOutlined, MenuOutlined, CloseOutlined} from "@ant-design/icons";
+import {SearchOutlined, CloseOutlined} from "@ant-design/icons";
 import InscribeImg from "../assets/images/inscribe.svg";
 import MarketImg from "../assets/images/market.svg";
 import store from "../store";
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
 import {useEffect, useRef} from "react";
-import {saveAccount} from "../store/reducer.js";
+import {saveAccount, saveNetwork} from "../store/reducer.js";
 import {useSelector} from "react-redux";
+import Loading from "../components/loading.jsx";
 
 const Box = styled.div`
     a{
@@ -48,6 +49,7 @@ const RhtBox = styled.div`
 
 export default function Header() {
     const {unisat} = window;
+    const loading = useSelector((state) => state.loading);
     const account = useSelector(store => store.account);
     const selfRef = useRef ({
         accounts: [],
@@ -65,7 +67,17 @@ export default function Header() {
             };
         }
         checkUnisat().then();
+        getUnisatNet();
     }, []);
+
+    const getUnisatNet = async() =>{
+        try {
+            let res = await unisat.getNetwork();
+            store.dispatch(saveNetwork(res))
+        } catch (e) {
+            console.log("network",e);
+        }
+    }
 
     const connect = async() =>{
         const result = await unisat.requestAccounts();
@@ -103,6 +115,9 @@ export default function Header() {
 
 
     return <div className="app-header">
+        {
+            loading &&   <Loading />
+        }
         <LogoBox>
             <a href="https://seeuclub.xyz/" rel="noreferrer"><img src={Logo} alt=""/></a>
         </LogoBox>

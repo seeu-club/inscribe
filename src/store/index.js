@@ -9,7 +9,7 @@ import {
 const persistConfig = {
   key: "root",
   storage,
-  blacklist: ["loading"],
+  blacklist: ["loading","network"],
 };
 const persistedReducer = persistReducer(persistConfig, mainReducer)
 

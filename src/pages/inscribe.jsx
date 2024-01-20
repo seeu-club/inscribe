@@ -15,7 +15,7 @@ export default function Inscribe() {
     // {"p":"brc-20","op":"deploy","tick":"333","max":"3456789000000","lim":"1000","dec":"18"}
     // {"p":"brc-20","op":"transfer","tick":"faaf","amt":"10"}
 
-    const [current,setCurrent] = useState(0)
+    const [current,setCurrent] = useState(1)
     const [list] = useState(["Mint","Deploy","Transfer"])
 
     const handleCurrent = (index) =>{
