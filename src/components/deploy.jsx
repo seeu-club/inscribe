@@ -1,4 +1,4 @@
-import {Button, Input,Slider,InputNumber} from "antd";
+import {Button, Input, Slider, InputNumber, notification} from "antd";
 import styled from "styled-components";
 import axios from 'axios';
 import store from "../store/index.js";
@@ -122,9 +122,10 @@ export default function Deploy(){
     const account = useSelector(store => store.account);
     const network = useSelector(store => store.network);
     const [inscription,setInscription] = useState({"p":"brc-20","op":"deploy","tick":"test","max":21000000,"lim":1000})
-    const [inputValue, setInputValue] = useState(0);
+    const [inputValue, setInputValue] = useState(2);
     const [type, setType] = useState(0);
-    const [fee,setFee] = useState({})
+    const [fee,setFee] = useState({});
+    const [currentFee,setCurrentFee] = useState(0)
     const [step,setStep] = useState(0)
     const [result,setResult] = useState({});
     const [hash,setHash] = useState('');
@@ -168,6 +169,7 @@ export default function Deploy(){
             arr[1].value = halfHourFee;
             arr[2].value = fastestFee;
             setInputValue(fastestFee)
+            setCurrentFee(economyFee)
             setList(arr);
             setFee(rt.data)
         }catch (e) {
@@ -178,7 +180,7 @@ export default function Deploy(){
     }
 
     const onSubmit = (data) =>{
-
+        setHash('')
         const {tick,supply,limit} = data;
         let str = {"p":"brc-20","op":"deploy","tick":tick,"max":supply,"lim":limit}
         setInscription(str)
@@ -198,10 +200,16 @@ export default function Deploy(){
 
     const onChange = (newValue) => {
         setInputValue(newValue);
+        setCurrentFee(newValue);
     };
 
     const handleType = (num) =>{
         setType(num)
+        if(num<2){
+            setCurrentFee(list[num].value)
+        }else{
+            setCurrentFee(inputValue)
+        }
     }
 
     const handlePay = async() =>{
@@ -211,8 +219,19 @@ export default function Deploy(){
             console.log(txid)
             setHash(txid)
 
+            notification.success({
+                message: `Deployed Success`,
+                placement:"topRight",
+            });
+            setStep(0)
+
         }catch (e) {
             console.error("sendBitcoin",e)
+            notification.error({
+                message: `Pay Failed`,
+                description: JSON.stringify(e),
+                placement:"topRight",
+            });
         }
     }
 
@@ -222,7 +241,7 @@ export default function Deploy(){
         const {tick,supply,limit,receive} = data;
         let obj = {
             receiveAddress: receive,
-            feeRate: inputValue,
+            feeRate: currentFee,
             outputValue: 546,
             devAddress: "",
             devFee: 0,
@@ -230,6 +249,8 @@ export default function Deploy(){
             "brc20Max": supply.toString(),
             "brc20Limit": limit.toString()
         }
+
+        console.log(obj)
         try{
 
             let rt = await deploy(obj);
@@ -237,9 +258,18 @@ export default function Deploy(){
             setResult(rt.data)
             setStep(1)
 
+            if(rt.code !== 0 ){
+                throw rt.msg;
+            }
+
         }catch (e) {
             console.error(e)
             setStep(0)
+            notification.error({
+                message: `Deployed Failed`,
+                description: JSON.stringify(e),
+                placement:"topRight",
+            });
         }finally {
             store.dispatch(saveLoading(null));
         }
@@ -290,7 +320,7 @@ export default function Deploy(){
                                 <Input
                                     placeholder="limit"
                                     className="h-10 w-[600px]"
-                                    status={errors.supply ? "error" : ""}
+                                    status={errors.limit ? "error" : ""}
                                     {...field}
                                 />
                             </>

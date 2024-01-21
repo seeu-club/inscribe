@@ -199,35 +199,81 @@ export default function Transfer(){
         setValue('receive', event.target.value);
     };
 
+    const onChange = (newValue) => {
+        setInputValue(newValue);
+        setCurrentFee(newValue);
+    };
 
-    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const handleDeploy = async (data) =>{
-        store.dispatch(saveLoading(true));
-        const {unisat} = window;
-        const {tick,amount,receive} = data;
+    const handleType = (num) =>{
+        setType(num)
+        if(num<2){
+            setCurrentFee(list[num].value)
+        }else{
+            setCurrentFee(inputValue)
+        }
+
+    }
+
+    const handlePay = async() =>{
         try{
-            let rt = await unisat.inscribeTransfer(tick,amount);
-            const {inscriptionId} = rt;
-            await delay(5000);
-            let txid = await unisat.sendInscription(receive, inscriptionId);
-
+            const {feeRate,payAddress,amount} = result;
+            let txid = await window.unisat.sendBitcoin(payAddress,amount, {feeRate});
+            console.log(txid)
             setHash(txid)
+
             notification.success({
                 message: `Transfer Success`,
                 placement:"topRight",
             });
+            setStep(0)
 
         }catch (e) {
-                console.error(e)
-                notification.error({
-                    message: `Transfer Failed`,
-                    description: JSON.stringify(e),
-                    placement:"topRight",
-                });
-        } finally {
+            console.error("sendBitcoin",e)
+            notification.error({
+                message: `Pay Failed`,
+                description: JSON.stringify(e),
+                placement:"topRight",
+            });
+        }
+    }
+
+
+    const handleDeploy = async (data) =>{
+        store.dispatch(saveLoading(true));
+        const {tick,amount,receive} = data;
+
+
+        let obj = {
+            receiveAddress: receive,
+            feeRate: currentFee,
+            outputValue: 546,
+            devAddress: "",
+            devFee: 0,
+            "brc20Ticker": tick,
+            "brc20Amount": amount.toString(),
+        }
+        try{
+
+            let rt = await transfer(obj);
+            console.log(rt)
+            setResult(rt.data)
+            setStep(1);
+
+            if(rt.code !== 0 ){
+                throw rt.msg;
+            }
+
+        }catch (e) {
+            console.error(e)
+            setStep(0)
+            notification.error({
+                message: `Mint Failed`,
+                description: JSON.stringify(e),
+                placement:"topRight",
+            });
+        }finally {
             store.dispatch(saveLoading(null));
         }
-
     }
 
 
@@ -286,6 +332,73 @@ export default function Transfer(){
                         )}
             />
         </div>
+        <UlBox>
+
+            {
+                list.map((item,index)=> (<li
+                    key={`list_${index}`}
+                    onClick={()=>handleType(index)}
+                    className={type === index ? "active":""} >
+                    <div className="bg">
+                        <div>
+                            {item.name}
+                        </div>
+                        <div className="ls">
+                            <div className="num">{index === 2? inputValue :item.value}</div>
+                            <div className="sym">sats/vB</div>
+                        </div>
+                    </div>
+
+                </li>))
+            }
+        </UlBox>
+        {
+            type === 2 && <FlexLine>
+                <Slider
+                    min={fee?.minimumFee || 0}
+                    max={500}
+                    className="sliderLft"
+                    onChange={onChange}
+                    value={typeof inputValue === 'number' ? inputValue : 0}
+                />
+                <InputNumber
+                    min={fee?.minimumFee || 0}
+                    max={500}
+                    style={{ margin: '0 16px' }}
+                    value={inputValue}
+                    onChange={onChange}
+                />
+            </FlexLine>
+        }
+
+        {
+            !!step && <div className=" flex flex-col gap-2 bt20">
+                <span>Inscription:</span>
+                <TextArea className="h-[100px] w-[800px]" value={JSON.stringify(inscription)} disabled/>
+            </div>
+        }
+
+        {
+            !!step && <LineBox>
+                <dl>
+                    <dt>Sats In Inscription:</dt>
+                    <dd>{result?.outputValue || 0}</dd>
+                </dl>
+                <dl>
+                    <dt>Network Fee:</dt>
+                    <dd>{result?.minerFee || 0}</dd>
+                </dl>
+                <dl>
+                    <dt>Service Fee:</dt>
+                    <dd>{result?.serviceFee || 0}</dd>
+                </dl>
+
+                <dl>
+                    <dt>Total:</dt>
+                    <dd>{result?.amount || 0}</dd>
+                </dl>
+            </LineBox>
+        }
 
         {
             hash && <HashBox>
@@ -297,10 +410,14 @@ export default function Transfer(){
 
 
         <div className=" flex items-center justify-center gap-5">
-        <Button type="primary" className=" h-10 w-[200px] launch-btn " onClick={() => handleConfirm()}><span
-                    className="label">Transfer</span></Button>
-
-
+            {
+                !step &&<Button type="primary" className=" h-10 w-[200px] launch-btn " onClick={() => handleConfirm()}><span
+                    className="label">Mint</span></Button>
+            }
+            {
+                !!step &&<Button type="primary" className=" h-10 w-[200px] launch-btn " onClick={() => handlePay()}><span
+                    className="label">Pay</span></Button>
+            }
         </div>
 
 

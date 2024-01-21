@@ -27,7 +27,7 @@ const LoadingBox = styled.div`
     position: fixed;
     left: 0;
     top: 0;
-    z-index: 9999;
+    z-index: 99;
     backdrop-filter: blur(4px);
   background: rgba(255,255,255,0.4);
 
