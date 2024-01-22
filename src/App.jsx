@@ -1,4 +1,4 @@
-import {BrowserRouter as Router} from "react-router-dom";
+import {HashRouter as Router} from "react-router-dom";
 import RouterLink from "./router/router";
 import GlobalStyle from "./utils/GlobalStyle";
 import store,{persistor} from "./store";
