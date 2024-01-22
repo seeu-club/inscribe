@@ -163,6 +163,7 @@ export default function Mint(){
     },[])
 
     const getRate = async() =>{
+        store.dispatch(saveLoading(true));
         try{
             let rt = await axios.get('https://mempool.space/api/v1/fees/recommended');
             const {economyFee,halfHourFee,fastestFee} = rt.data;
@@ -176,6 +177,8 @@ export default function Mint(){
             setFee(rt.data)
         }catch (e) {
             console.error("https://mempool.space/api/v1/fees/recommended",e)
+        }finally {
+            store.dispatch(saveLoading(null));
         }
 
 
@@ -215,6 +218,7 @@ export default function Mint(){
     }
 
     const handlePay = async() =>{
+        store.dispatch(saveLoading(true));
         try{
             const {feeRate,payAddress,amount} = result;
             let txid = await window.unisat.sendBitcoin(payAddress,amount, {feeRate});
@@ -234,6 +238,8 @@ export default function Mint(){
                 description: JSON.stringify(e),
                 placement:"topRight",
             });
+        }finally {
+            store.dispatch(saveLoading(null));
         }
     }
 
