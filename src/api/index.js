@@ -12,7 +12,7 @@ const instance = axios.create({
 instance.interceptors.request.use(function (config) {
 
   const state = store.getState();
-  const mode = state.network;
+  const mode = state.network ;
 
   console.log(state)
 

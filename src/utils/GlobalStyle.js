@@ -185,10 +185,13 @@ const GlobalStyle = createGlobalStyle`
         flex-direction: column;
         align-items: center;
         min-height: 100vh!important;
+  
+
     }
+    
 
     .app-layout .app-container {
-        //width: 1400px;
+        width: 1200px;
         //min-width: 1200px;
     }
 
