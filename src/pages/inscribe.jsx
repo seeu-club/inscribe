@@ -10,7 +10,7 @@ import Transfer from "../components/transfer.jsx";
 
 export default function Inscribe() {
 
-    const [current,setCurrent] = useState(2)
+    const [current,setCurrent] = useState(0)
     const [list] = useState(["Mint","Deploy","Transfer"])
 
     const handleCurrent = (index) =>{
